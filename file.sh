@@ -293,7 +293,7 @@ rpt_download_remote()
 {
     pr_info "Downloading remote file %s to %s" "${1}" "${2}"
 
-    # 网址重定向函数
+    # github鍔犻�熺綉鍧�
     acc_url="https://ghproxy.futils.com/"
     URL="${1}"
     filename="${URL##*/}"
