@@ -21,7 +21,7 @@ dtsfiles="https://raw.githubusercontent.com/pocopico/tinycore-redpill/$build"
 timezone="UTC"
 ntpserver="pool.ntp.org"
 
-fullupdatefiles="rploader-cn.sh custom_config.json custom_config_jun.json global_config.json modules.alias.3.json.gz modules.alias.4.json.gz rpext-index.json user_config.json dtc rploader.sh ds1621p.dts ds920p.dts"
+fullupdatefiles="rploader-cn.sh ext-manager.sh file.shcustom_config.json custom_config_jun.json global_config.json modules.alias.3.json.gz modules.alias.4.json.gz rpext-index.json user_config.json dtc rploader.sh ds1621p.dts ds920p.dts"
 
 ############### Date : 220619
 # github加速网址
