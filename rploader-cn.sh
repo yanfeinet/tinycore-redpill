@@ -2506,7 +2506,7 @@ build)
     checkinternet
     getlatestrploader
     gitdownload
-    chown -R tc redpill*
+    sudo chown -R tc redpill*
     cp /home/tc/ext-manager.sh /home/tc/redpill-load/ext-manager.sh
     cp /home/tc/file.sh /home/tc/redpill-load/include/file.sh
 
