@@ -1,4 +1,3 @@
-
 #!/bin/bash
 #
 # Author :
@@ -22,7 +21,20 @@ dtsfiles="https://raw.githubusercontent.com/pocopico/tinycore-redpill/$build"
 timezone="UTC"
 ntpserver="pool.ntp.org"
 
-fullupdatefiles="custom_config.json custom_config_jun.json global_config.json modules.alias.3.json.gz modules.alias.4.json.gz rpext-index.json user_config.json dtc rploader.sh ds1621p.dts ds920p.dts"
+fullupdatefiles="rploader-cn.sh custom_config.json custom_config_jun.json global_config.json modules.alias.3.json.gz modules.alias.4.json.gz rpext-index.json user_config.json dtc rploader.sh ds1621p.dts ds920p.dts"
+
+############### Date : 220619
+# github加速网址
+acc_url="https://ghproxy.futils.com/"
+
+# 网址重定向函数
+function remix_url() {
+    TMPURL="${1}"
+    TMPURL=${TMPURL/"https://raw.githubusercontent.com/"/${acc_url}"https://raw.githubusercontent.com/"}
+    TMPURL=${TMPURL/"https://github.com"/${acc_url}"https://raw.githubusercontent.com"}
+    TMPURL=${TMPURL/"/raw/"/"/"}
+    echo "Redirecting..."
+}
 
 # END Do not modify after this line
 ######################################################################################################
@@ -542,8 +554,8 @@ function postupdatev1() {
     if [ ! -n "$(which bspatch)" ]; then
 
         echo "bspatch does not exist, bringing over from repo"
-
-        curl --location "https://raw.githubusercontent.com/pocopico/tinycore-redpill/$build/bspatch" -O
+        remix_url "https://raw.githubusercontent.com/pocopico/tinycore-redpill/$build/bspatch"
+        curl --location ${TMPURL} -O
 
         chmod 777 bspatch
         sudo mv bspatch /usr/local/bin/
@@ -712,7 +724,8 @@ function removebundledexts() {
 
     echo "Removing bundled exts directories"
     for bundledext in $(grep ":" bundled-exts.json | awk '{print $2}' | sed -e 's/"//g' | sed -e 's/,/\n/g'); do
-        bundledextdir=$(curl --location -s "$bundledext" | jq -r -e '.id')
+        remix_url $bundledext
+        bundledextdir=$(curl --location ${TMPURL} | jq -r -e '.id')
         if [ -d /home/tc/redpill-load/custom/extensions/${bundledextdir} ]; then
             echo "Removing : ${bundledextdir}"
             sudo rm -rf /home/tc/redpill-load/custom/extensions/${bundledextdir}
@@ -736,7 +749,8 @@ function fullupgrade() {
         echo "Updating ${updatefile}"
 
         sudo mv $updatefile old/${updatefile}.${backupdate}
-        sudo curl --location "${rploaderrepo}/${updatefile}" -O
+        remix_url ${rploaderrepo}/${updatefile}
+        sudo curl --location ${TMPURL} -O
 
     done
 
@@ -964,7 +978,8 @@ function patchdtc() {
     fi
 
     echo "Downloading dtc binary"
-    curl --location --progress-bar "$dtcbin" -O
+    remix_url $dtcbin
+    curl --location --progress-bar ${TMPURL} -O
     chmod 700 dtc
 
     if [ -f /home/tc/custom-module/${dtbfile}.dts ] && [ ! -f /home/tc/custom-module/${dtbfile}.dtb ]; then
@@ -1006,7 +1021,8 @@ function patchdtc() {
 
     if [ ! -f ${dtbfile}.dts ]; then
         echo "dts file for ${dtbfile} not found, trying to download"
-        curl --location --progress-bar -O "${dtsfiles}/${dtbfile}.dts"
+        remix_url ${dtsfiles}/${dtbfile}.dts
+        curl --location --progress-bar -O ${TMPURL}
     fi
 
     echo "Found $(echo $localdisks | wc -w) disks and $(echo $localnvme | wc -w) nvme"
@@ -1585,7 +1601,8 @@ function gettoolchain() {
         echo "File already cached"
     else
         echo "Downloading and caching toolchain"
-        curl --progress-bar --location "${TOOLKIT_URL}" --output dsm-toolchain.7.0.txz
+        remix_url ${TOOLKIT_URL}
+        curl --progress-bar --location ${TMPURL} --output dsm-toolchain.7.0.txz
     fi
 
     echo -n "Checking file -> "
@@ -1735,12 +1752,16 @@ EOF
 function showsyntax() {
     cat <<EOF
 $(basename ${0})
+
 Version : $rploaderver
 ----------------------------------------------------------------------------------------
+
 Usage: ${0} <action> <platform version> <static or compile module> [extension manager arguments]
+
 Actions: build, ext, download, clean, update, listmod, serialgen, identifyusb, patchdtc, 
 satamap, backup, backuploader, restoreloader, restoresession, mountdsmroot, postupdate,
 mountshare, version, help
+
 ----------------------------------------------------------------------------------------
 Available platform versions:
 ----------------------------------------------------------------------------------------
@@ -1753,19 +1774,24 @@ EOF
 function showhelp() {
     cat <<EOF
 $(basename ${0})
+
 Version : $rploaderver
 ----------------------------------------------------------------------------------------
 Usage: ${0} <action> <platform version> <static or compile module> [extension manager arguments]
+
 Actions: build, ext, download, clean, update, listmod, serialgen, identifyusb, patchdtc, 
 satamap, backup, backuploader, restoreloader, restoresession, mountdsmroot, postupdate, 
 mountshare, version, help 
+
 - build <platform> <option> : 
   Build the 💊 RedPill LKM and update the loader image for the specified platform version and update
   current loader.
+
   Valid Options:     static/compile/manual 
   
 - ext <platform> <option> <URL> 
   Manage extensions using redpill extension manager. 
+
   Valid Options:  add/force_add/info/remove/update/cleanup/auto . Options after platform 
   
   Example: 
@@ -1822,11 +1848,14 @@ mountshare, version, help
   
 - mountshare :
   Mounts a remote CIFS working directory
+
 - version <option>:
   Prints rploader version and if the history option is passed then the version history is listed.
+
   Valid Options : history, shows rploader release history.
   
 - help:           Show this page
+
 Version : $rploaderver
 ----------------------------------------------------------------------------------------
 Available platform versions:
@@ -1895,7 +1924,8 @@ function getstaticmodule() {
     echo "Removing any old redpill.ko modules"
     [ -f /home/tc/redpill.ko ] && rm -f /home/tc/redpill.ko
 
-    extension=$(curl -s --location "$redpillextension")
+    remix_url $redpillextension
+    extension=$(curl -s --location ${TMPURL})
 
     if [ "${TARGET_PLATFORM}" = "apollolake" ]; then
         SYNOMODEL="ds918p_$TARGET_REVISION"
@@ -1917,11 +1947,13 @@ function getstaticmodule() {
 
     #release=`echo $extension |  jq -r '.releases .${SYNOMODEL}_{$TARGET_REVISION}'`
     release=$(echo $extension | jq -r -e --arg SYNOMODEL $SYNOMODEL '.releases[$SYNOMODEL]')
-    files=$(curl -s --location "$release" | jq -r '.files[] .url')
+    remix_url $release
+    files=$(curl --location ${TMPURL} | jq -r '.files[] .url')
 
     for file in $files; do
         echo "Getting file $file"
-        curl -s -O $file
+        remix_url $file
+        curl -O ${TMPURL}
         if [ -f redpill*.tgz ]; then
             echo "Extracting module"
             tar xf redpill*.tgz
@@ -2133,6 +2165,7 @@ function kernelprepare() {
 static int per_cpu_shndx       = -1;
 -Elf_Addr per_cpu_load_addr;
 +static Elf_Addr per_cpu_load_addr;
+
 static void percpu_init(void)
 {
 EOF
@@ -2152,11 +2185,13 @@ EOF
 function getlatestrploader() {
 
     echo -n "Checking if a newer version exists on the $build repo -> "
-
-    curl -s --location "$rploaderfile" --output latestrploader.sh
-    curl -s --location "$modalias3" --output modules.alias.3.json.gz
+    remix_url $rploaderfile
+    curl --location ${TMPURL} --output latestrploader.sh
+    remix_url $modalias3
+    curl --location ${TMPURL} --output modules.alias.3.json.gz
     [ -f modules.alias.3.json.gz ] && gunzip -f modules.alias.3.json.gz
-    curl -s --location "$modalias4" --output modules.alias.4.json.gz
+    remix_url $modalias4
+    curl --location ${TMPURL} --output modules.alias.4.json.gz
     [ -f modules.alias.4.json.gz ] && gunzip -f modules.alias.4.json.gz
 
     CURRENTSHA="$(sha256sum rploader.sh | awk '{print $1}')"
@@ -2192,7 +2227,7 @@ function getvars() {
     CONFIG=$(readConfig)
     selectPlatform $1
 
-    GETTIME=$(curl -v --silent https://google.com/ 2>&1 | grep Date | sed -e 's/< Date: //')
+    GETTIME=$(curl -v --silent http://baidu.com/ 2>&1 | grep Date | sed -e 's/< Date: //')
     INTERNETDATE=$(date +"%d%m%Y" -d "$GETTIME")
     LOCALDATE=$(date +"%d%m%Y")
 
@@ -2415,7 +2450,8 @@ function listmodules() {
 function listextension() {
 
     if [ ! -f rpext-index.json ]; then
-        curl --progress-bar --location "${modextention}" --output rpext-index.json
+        remix_url ${modextention}
+        curl --progress-bar --location ${TMPURL} --output rpext-index.json
     fi
 
     ## Get extension author rpext-index.json and then parse for extension download with :
@@ -2569,7 +2605,8 @@ interactive)
     if [ -f interactive.sh ]; then
         . ./interactive.sh
     else
-        curl --location --progress-bar "https://github.com/pocopico/tinycore-redpill/raw/$build/interactive.sh" --output interactive.sh
+        remix_url "https://github.com/pocopico/tinycore-redpill/raw/$build/interactive.sh"
+        curl --location --progress-bar ${TMPURL} --output interactive.sh
         . ./interactive.sh
         exit 99
     fi
