@@ -10,7 +10,7 @@
 rploaderver="0.8.0.3"
 build="main"
 rploaderfile="https://raw.githubusercontent.com/pocopico/tinycore-redpill/$build/rploader.sh"
-rploaderrepo="https://github.com/pocopico/tinycore-redpill/raw/$build/"
+rploaderrepo="https://github.com/llm-y2k/tinycore-redpill/raw/$build/"
 
 redpillextension="https://github.com/pocopico/rp-ext/raw/$build/redpill/rpext-index.json"
 modextention="https://github.com/pocopico/rp-ext/raw/$build/rpext-index.json"
